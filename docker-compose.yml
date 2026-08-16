@@ -5,7 +5,6 @@ services:
     restart: unless-stopped
     init: true
     ports:
-      - "5060:5060/udp"
       - "5060:5060/tcp"
       - "5062:5062/tcp"
       - "10000-10100:10000-10100/udp"
