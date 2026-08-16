@@ -21,6 +21,7 @@ Copy `.env.example` to `.env` for manual deployment. Never commit `.env`.
 | `EXTERNAL_IP` | Public IPv4 address of the bridge VPS |
 | `SIPGATE_USER` | sipgate trunk SIP ID |
 | `SIPGATE_PASS` | sipgate trunk SIP password |
+| `SIPGATE_REGISTRAR` | Registrar shown in the sipgate trunk settings; defaults to `sip.sipgate.com` |
 | `LIVEKIT_SIP_HOST` | LiveKit global or region-pinned SIP endpoint, without `sip:` |
 | `LIVEKIT_SIP_PORT` | LiveKit SIP port; defaults to `5060` |
 | `LIVEKIT_SIP_TRANSPORT` | LiveKit SIP transport; defaults to `tcp` |
@@ -80,6 +81,7 @@ Optional `production` environment variables:
 ```text
 LIVEKIT_SIP_PORT=5060
 LIVEKIT_SIP_TRANSPORT=tcp
+SIPGATE_REGISTRAR=sip.sipgate.com
 DEFAULT_COUNTRY_CODE=49
 ```
 

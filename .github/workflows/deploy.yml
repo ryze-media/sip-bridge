@@ -22,6 +22,7 @@ jobs:
       EXTERNAL_IP: ${{ secrets.EXTERNAL_IP }}
       SIPGATE_USER: ${{ secrets.SIPGATE_USER }}
       SIPGATE_PASS: ${{ secrets.SIPGATE_PASS }}
+      SIPGATE_REGISTRAR: ${{ vars.SIPGATE_REGISTRAR || 'sip.sipgate.com' }}
       LIVEKIT_SIP_HOST: ${{ secrets.LIVEKIT_SIP_HOST }}
       LIVEKIT_SIP_PORT: ${{ vars.LIVEKIT_SIP_PORT || '5060' }}
       LIVEKIT_SIP_TRANSPORT: ${{ vars.LIVEKIT_SIP_TRANSPORT || 'tcp' }}

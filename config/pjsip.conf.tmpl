@@ -49,8 +49,8 @@ local_net=192.168.0.0/16
 type=registration
 transport=transport-udp
 outbound_auth=sipgate-auth
-server_uri=sip:sipconnect.sipgate.de
-client_uri=sip:${SIPGATE_USER}@sipconnect.sipgate.de
+server_uri=sip:${SIPGATE_REGISTRAR}
+client_uri=sip:${SIPGATE_USER}@${SIPGATE_REGISTRAR}
 contact_user=${SIPGATE_USER}
 retry_interval=60
 
@@ -70,7 +70,7 @@ rewrite_contact=yes
 rtp_symmetric=yes
 disallow=all
 allow=alaw
-from_domain=sipconnect.sipgate.de
+from_domain=${SIPGATE_REGISTRAR}
 
 [sipgate-identify]
 type=identify
