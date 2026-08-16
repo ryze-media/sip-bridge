@@ -25,7 +25,7 @@ COPY scripts/ /usr/local/bin/
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh /usr/local/bin/*.sh
 
-EXPOSE 5060/udp 5060/tcp 10000-10100/udp
+EXPOSE 5060/udp 5060/tcp 5062/tcp 10000-10100/udp
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
     CMD ["/usr/local/bin/healthcheck.sh"]

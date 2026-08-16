@@ -41,8 +41,10 @@ load-balancer proxy: DNS NAPTR/SRV discovery provides the targets while keeping
 
 ## Manual deployment
 
-The VPS must expose SIP signalling and the configured RTP range. Restrict SIP
-ingress to sipgate's documented networks at the host firewall.
+The VPS must expose SIP signalling and the configured RTP range. The new
+sipgate TLS transport advertises TCP port `5062`, which is published by Docker
+for inbound calls. Restrict that port to sipgate's documented signaling
+networks at the host firewall.
 
 ```bash
 cp .env.example .env

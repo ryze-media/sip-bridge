@@ -51,6 +51,7 @@ grep -Fq 'same => n,GotoIf($["${NUMBER:0:1}" = "+"]?done)' "$extensions"
 grep -Fq 'same => n,Set(NUMBER=+${NUMBER})' "$extensions"
 grep -Fq 'same => n(national),Set(NUMBER=+49${NUMBER:1})' "$extensions"
 grep -Fq 'externaddr=203.0.113.10' "$rtp"
+grep -Fq '5062:5062/tcp' "$repo_dir/docker-compose.yml"
 
 render_log="$($repo_dir/scripts/render-config.sh 2>&1)"
 if grep -Fq 'sipgate-test-secret' <<<"$render_log" || grep -Fq 'livekit-test-secret' <<<"$render_log"; then

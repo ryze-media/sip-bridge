@@ -7,6 +7,7 @@ services:
     ports:
       - "5060:5060/udp"
       - "5060:5060/tcp"
+      - "5062:5062/tcp"
       - "10000-10100:10000-10100/udp"
     environment:
       EXTERNAL_IP: ${EXTERNAL_IP:?EXTERNAL_IP is required}
