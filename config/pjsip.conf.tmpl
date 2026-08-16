@@ -64,10 +64,12 @@ password=${SIPGATE_PASS}
 type=endpoint
 transport=transport-udp
 context=from-sipgate
+direct_media=no
+force_rport=yes
+rewrite_contact=yes
+rtp_symmetric=yes
 disallow=all
-allow=g722
 allow=alaw
-allow=ulaw
 from_domain=sipconnect.sipgate.de
 
 [sipgate-identify]
@@ -77,25 +79,27 @@ match=217.10.68.0/24
 match=217.116.112.0/20
 
 ; ============================================
-; AI PLATFORM (outbound)
+; LIVEKIT (outbound)
 ; ============================================
 
-[ai-platform]
+[livekit]
 type=endpoint
-transport=transport-${AI_SIP_TRANSPORT}
-context=to-ai
-aors=ai-platform-aor
+transport=transport-${LIVEKIT_SIP_TRANSPORT}
+context=from-livekit
+outbound_auth=livekit-auth
+aors=livekit-aor
+direct_media=no
 disallow=all
-allow=g722
-allow=ulaw
 allow=alaw
-from_domain=${AI_SIP_HOST}
+from_domain=${LIVEKIT_SIP_HOST}
 
-[ai-platform-aor]
+[livekit-auth]
+type=auth
+auth_type=userpass
+username=${LIVEKIT_SIP_USER}
+password=${LIVEKIT_SIP_PASS}
+
+[livekit-aor]
 type=aor
-contact=sip:${AI_SIP_HOST}:${AI_SIP_PORT}\;transport=${AI_SIP_TRANSPORT}
-
-[ai-platform-identify]
-type=identify
-endpoint=ai-platform
-match=${AI_SIP_HOST}
+contact=sip:${LIVEKIT_SIP_HOST}:${LIVEKIT_SIP_PORT}\;transport=${LIVEKIT_SIP_TRANSPORT}
+qualify_frequency=30
