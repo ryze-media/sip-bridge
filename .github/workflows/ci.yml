@@ -1,0 +1,21 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install template tooling
+        run: sudo apt-get update && sudo apt-get install -y gettext-base
+      - name: Test configuration rendering
+        run: bash tests/test-config.sh
+      - name: Build container
+        run: docker build --tag ryze-sip-bridge:test .

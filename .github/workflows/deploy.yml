@@ -1,0 +1,50 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sip-bridge-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy on VPS
+    runs-on: [self-hosted, linux, x64, sip-bridge]
+    environment: production
+    timeout-minutes: 15
+    env:
+      EXTERNAL_IP: ${{ secrets.EXTERNAL_IP }}
+      SIPGATE_USER: ${{ secrets.SIPGATE_USER }}
+      SIPGATE_PASS: ${{ secrets.SIPGATE_PASS }}
+      LIVEKIT_SIP_HOST: ${{ secrets.LIVEKIT_SIP_HOST }}
+      LIVEKIT_SIP_PORT: ${{ vars.LIVEKIT_SIP_PORT || '5060' }}
+      LIVEKIT_SIP_TRANSPORT: ${{ vars.LIVEKIT_SIP_TRANSPORT || 'tcp' }}
+      LIVEKIT_SIP_USER: ${{ secrets.LIVEKIT_SIP_USER }}
+      LIVEKIT_SIP_PASS: ${{ secrets.LIVEKIT_SIP_PASS }}
+      DEFAULT_COUNTRY_CODE: ${{ vars.DEFAULT_COUNTRY_CODE || '49' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate deployment configuration
+        run: docker compose config --quiet
+      - name: Build and deploy
+        run: docker compose up --detach --build --remove-orphans
+      - name: Wait for bridge health
+        shell: bash
+        run: |
+          for attempt in {1..12}; do
+            health="$(docker inspect --format='{{.State.Health.Status}}' sip-bridge 2>/dev/null || true)"
+            if [[ "$health" == "healthy" ]]; then
+              docker compose ps
+              exit 0
+            fi
+            sleep 5
+          done
+          docker compose ps
+          docker compose logs --tail=100
+          exit 1

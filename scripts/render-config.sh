@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+: "${EXTERNAL_IP:?EXTERNAL_IP is required}"
+: "${SIPGATE_USER:?SIPGATE_USER is required}"
+: "${SIPGATE_PASS:?SIPGATE_PASS is required}"
+: "${LIVEKIT_SIP_HOST:?LIVEKIT_SIP_HOST is required}"
+: "${LIVEKIT_SIP_USER:?LIVEKIT_SIP_USER is required}"
+: "${LIVEKIT_SIP_PASS:?LIVEKIT_SIP_PASS is required}"
+
+LIVEKIT_SIP_PORT="${LIVEKIT_SIP_PORT:-5060}"
+LIVEKIT_SIP_TRANSPORT="${LIVEKIT_SIP_TRANSPORT:-tcp}"
+DEFAULT_COUNTRY_CODE="${DEFAULT_COUNTRY_CODE:-49}"
+CONFIG_OUTPUT_DIR="${CONFIG_OUTPUT_DIR:-/etc/asterisk}"
+CONFIG_TEMPLATE_DIR="${CONFIG_TEMPLATE_DIR:-/opt/config}"
+RTP_TEMPLATE="${RTP_TEMPLATE:-/etc/asterisk/rtp.conf.tmpl}"
+
+export LIVEKIT_SIP_PORT LIVEKIT_SIP_TRANSPORT DEFAULT_COUNTRY_CODE
+mkdir -p "$CONFIG_OUTPUT_DIR"
+
+envsubst '${EXTERNAL_IP} ${SIPGATE_USER} ${SIPGATE_PASS} ${LIVEKIT_SIP_HOST} ${LIVEKIT_SIP_PORT} ${LIVEKIT_SIP_TRANSPORT} ${LIVEKIT_SIP_USER} ${LIVEKIT_SIP_PASS}' \
+  < "$CONFIG_TEMPLATE_DIR/pjsip.conf.tmpl" \
+  > "$CONFIG_OUTPUT_DIR/pjsip.conf"
+
+envsubst '${DEFAULT_COUNTRY_CODE}' \
+  < "$CONFIG_TEMPLATE_DIR/extensions.conf" \
+  > "$CONFIG_OUTPUT_DIR/extensions.conf"
+
+envsubst '${EXTERNAL_IP}' \
+  < "$RTP_TEMPLATE" \
+  > "$CONFIG_OUTPUT_DIR/rtp.conf"
+
+cp "$CONFIG_TEMPLATE_DIR/modules.conf" "$CONFIG_OUTPUT_DIR/modules.conf"
+echo "Rendered Asterisk configuration for ${LIVEKIT_SIP_HOST}"

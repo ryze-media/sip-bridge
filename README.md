@@ -1,81 +1,110 @@
-# sipgate SIP Bridge
+# Ryze sipgate-to-LiveKit SIP bridge
 
-Minimal Asterisk container that connects sipgate trunking to any AI voice platform.
+An Asterisk bridge that registers with a sipgate trunk and forwards inbound
+calls to LiveKit SIP. This is a Ryze-specific fork of
+[`sipgate/sip-bridge`](https://github.com/sipgate/sip-bridge).
 
-**What does it do?** Registers with sipgate, accepts incoming calls, and forwards them via SIP to the AI platform of your choice.
+```text
+PSTN caller <-> sipgate <-> Asterisk <-> LiveKit SIP <-> LiveKit room/agent
+```
 
-## Quick Start
+The bridge keeps both SIP/RTP legs active, forces media through Asterisk, and
+uses PCMA (G.711 A-law) on both sides to avoid transcoding during the initial
+deployment.
+
+## Configuration
+
+Copy `.env.example` to `.env` for manual deployment. Never commit `.env`.
+
+| Variable | Purpose |
+|---|---|
+| `EXTERNAL_IP` | Public IPv4 address of the bridge VPS |
+| `SIPGATE_USER` | sipgate trunk SIP ID |
+| `SIPGATE_PASS` | sipgate trunk SIP password |
+| `LIVEKIT_SIP_HOST` | LiveKit global or region-pinned SIP endpoint, without `sip:` |
+| `LIVEKIT_SIP_PORT` | LiveKit SIP port; defaults to `5060` |
+| `LIVEKIT_SIP_TRANSPORT` | LiveKit SIP transport; defaults to `tcp` |
+| `LIVEKIT_SIP_USER` | Username configured on the LiveKit inbound trunk |
+| `LIVEKIT_SIP_PASS` | Password configured on the LiveKit inbound trunk |
+| `DEFAULT_COUNTRY_CODE` | Country code used for national number normalization; defaults to `49` |
+
+The LiveKit inbound trunk must contain the sipgate number and matching digest
+credentials. Attach an individual dispatch rule that dispatches the
+`spark-agent` agent.
+
+## Manual deployment
+
+The VPS must expose SIP signalling and the configured RTP range. Restrict SIP
+ingress to sipgate's documented networks at the host firewall.
 
 ```bash
-# 1. Clone / unpack
-cd sip-bridge
-
-# 2. Create .env
 cp .env.example .env
-
-# 3. Edit .env — fill in your values:
-#    EXTERNAL_IP, SIPGATE_USER, SIPGATE_PASS, AI_SIP_HOST
-
-# 4. Start
-docker compose up -d
-
-# 5. Check logs & status
-docker logs -f sip-bridge
+# Fill in .env.
+docker compose config --quiet
+docker compose up --detach --build
+docker compose ps
 ```
 
-## Configuration (.env)
-
-| Variable | Description | Example |
-|---|---|---|
-| `EXTERNAL_IP` | Public IP of your server | `1.2.3.4` |
-| `SIPGATE_USER` | sipgate trunk account | `1234567t0` |
-| `SIPGATE_PASS` | sipgate password | `secret123` |
-| `AI_SIP_HOST` | SIP host of the AI platform | `sip.rtc.elevenlabs.io` |
-| `AI_SIP_PORT` | SIP port (usually 5060) | `5060` |
-| `AI_SIP_TRANSPORT` | Transport protocol | `tcp` |
-
-## Requirements
-
-- VPS or server with a **public IP address** and Docker installed (e.g. Hetzner CX22, ~€4/month)
-- Set `EXTERNAL_IP` to your server's public IP — Asterisk uses it to announce the correct RTP address behind Docker NAT
-
-## Firewall
+Useful checks:
 
 ```bash
-ufw allow from 217.10.68.0/24 to any port 5060    # sipgate signaling
-ufw allow from 217.116.112.0/20 to any port 5060  # sipgate signaling
-ufw allow 5060/tcp                                 # AI platform
-ufw allow 10000:10100/udp                          # RTP media
+docker exec sip-bridge asterisk -rx "pjsip show registrations"
+docker exec sip-bridge asterisk -rx "pjsip show endpoints"
+docker exec sip-bridge asterisk -rx "core show channels"
+docker compose logs --tail=100
 ```
 
-## Debugging
+## GitHub Actions deployment
+
+`.github/workflows/deploy.yml` deploys every push to `main` on a dedicated
+self-hosted runner installed on the VPS. Give the runner these labels:
+
+```text
+self-hosted, linux, x64, sip-bridge
+```
+
+The runner account needs Docker and Docker Compose access. Create a GitHub
+environment named `production` with these secrets:
+
+```text
+EXTERNAL_IP
+SIPGATE_USER
+SIPGATE_PASS
+LIVEKIT_SIP_HOST
+LIVEKIT_SIP_USER
+LIVEKIT_SIP_PASS
+```
+
+Optional `production` environment variables:
+
+```text
+LIVEKIT_SIP_PORT=5060
+LIVEKIT_SIP_TRANSPORT=tcp
+DEFAULT_COUNTRY_CODE=49
+```
+
+The deployment builds on the VPS, replaces the Compose service, and waits for
+the container to report healthy. A healthy bridge means Asterisk booted and
+the sipgate registration is `Registered`.
+
+## Validation
 
 ```bash
-docker exec sip-bridge asterisk -rx "pjsip show registrations"  # sipgate registration
-docker exec sip-bridge asterisk -rx "pjsip show endpoints"      # endpoints
-docker exec sip-bridge asterisk -rx "core show channels"         # active calls
-
-# Interactive CLI
-docker exec -it sip-bridge asterisk -rvvv
+bash tests/test-config.sh
+docker build --tag ryze-sip-bridge:test .
 ```
 
-## AI Platform Setup
+CI runs both checks for pull requests and pushes to `main`.
 
-Most AI voice platforms have an "Import number from SIP trunk" option. Enter your VPS's public IP as the address.
+## Number handling
 
-### Authentication
+The dialplan normalizes caller and destination numbers to E.164 before
+forwarding them to LiveKit:
 
-By default no SIP credentials are configured — the AI platform should use IP-based ACL authentication with "Allow all addresses". If your platform requires digest auth, set `AI_SIP_USER` and `AI_SIP_PASS` in `.env`.
+- `+49...` stays unchanged.
+- `0049...` becomes `+49...`.
+- `0...` becomes `+<DEFAULT_COUNTRY_CODE>...`.
+- A number without an international prefix gets `+` prepended.
 
-### Supported Platforms
-
-| Platform | SIP Host | Port | Transport |
-|---|---|---|---|
-| ElevenLabs | `sip.rtc.elevenlabs.io` | 5060 | tcp |
-| Vapi | `sip.vapi.ai` | 5060 | tcp |
-| Retell | `sip.retellai.com` | 5060 | tcp |
-| Bland AI | `sip.bland.ai` | 5060 | tcp |
-
-## Resources
-
-~30–50 MB RAM, <1% CPU idle, ~100 MB disk.
+Verify the actual sipgate `From` and request URI values with a test call before
+production use. Anonymous caller IDs remain empty.
