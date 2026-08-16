@@ -41,18 +41,37 @@ local_net=10.0.0.0/8
 local_net=172.16.0.0/12
 local_net=192.168.0.0/16
 
+[transport-sipgate-tls]
+type=transport
+protocol=tls
+bind=0.0.0.0:5062
+method=tlsv1_2
+verify_server=yes
+ca_list_file=/etc/ssl/certs/ca-certificates.crt
+allow_reload=yes
+external_media_address=${EXTERNAL_IP}
+external_signaling_address=${EXTERNAL_IP}
+local_net=10.0.0.0/8
+local_net=172.16.0.0/12
+local_net=192.168.0.0/16
+
 ; ============================================
 ; SIPGATE TRUNK (inbound)
 ; ============================================
 
 [sipgate]
 type=registration
-transport=transport-udp
+transport=transport-sipgate-tls
 outbound_auth=sipgate-auth
-server_uri=sip:${SIPGATE_REGISTRAR}
+server_uri=sip:${SIPGATE_USER}@${SIPGATE_REGISTRAR}\;transport=tls
 client_uri=sip:${SIPGATE_USER}@${SIPGATE_REGISTRAR}
 contact_user=${SIPGATE_USER}
+expiration=3600
 retry_interval=60
+forbidden_retry_interval=60
+fatal_retry_interval=60
+auth_rejection_permanent=no
+max_retries=10
 
 [sipgate-auth]
 type=auth
@@ -62,7 +81,7 @@ password=${SIPGATE_PASS}
 
 [sipgate-endpoint]
 type=endpoint
-transport=transport-udp
+transport=transport-sipgate-tls
 context=from-sipgate
 direct_media=no
 force_rport=yes
@@ -75,6 +94,7 @@ from_domain=${SIPGATE_REGISTRAR}
 [sipgate-identify]
 type=identify
 endpoint=sipgate-endpoint
+match=217.10.64.0/20
 match=217.10.68.0/24
 match=217.116.112.0/20
 

@@ -26,9 +26,20 @@ extensions="$output_dir/extensions.conf"
 rtp="$output_dir/rtp.conf"
 
 grep -Fq 'outbound_auth=livekit-auth' "$pjsip"
-grep -Fq 'server_uri=sip:sip.sipgate.com' "$pjsip"
+grep -Fq '[transport-sipgate-tls]' "$pjsip"
+grep -Fq 'verify_server=yes' "$pjsip"
+grep -Fq 'ca_list_file=/etc/ssl/certs/ca-certificates.crt' "$pjsip"
+grep -Fq 'transport=transport-sipgate-tls' "$pjsip"
+grep -Fq 'server_uri=sip:1234567t0@sip.sipgate.com\;transport=tls' "$pjsip"
 grep -Fq 'client_uri=sip:1234567t0@sip.sipgate.com' "$pjsip"
+grep -Fq 'contact_user=1234567t0' "$pjsip"
+grep -Fq 'auth_rejection_permanent=no' "$pjsip"
+grep -Fq 'match=217.10.64.0/20' "$pjsip"
 grep -Fq 'from_domain=sip.sipgate.com' "$pjsip"
+if grep -Fq 'outbound_proxy=' "$pjsip" || grep -Fq 'sipconnect.sipgate.de' "$pjsip"; then
+  echo "rendered config contains a classic-platform registrar or explicit proxy" >&2
+  exit 1
+fi
 grep -Fq 'username=livekit-user' "$pjsip"
 grep -Fq 'password=livekit-test-secret' "$pjsip"
 grep -Fq 'contact=sip:example.sip.livekit.cloud:5060\;transport=tcp' "$pjsip"

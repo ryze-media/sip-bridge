@@ -21,7 +21,7 @@ Copy `.env.example` to `.env` for manual deployment. Never commit `.env`.
 | `EXTERNAL_IP` | Public IPv4 address of the bridge VPS |
 | `SIPGATE_USER` | sipgate trunk SIP ID |
 | `SIPGATE_PASS` | sipgate trunk SIP password |
-| `SIPGATE_REGISTRAR` | Registrar shown in the sipgate trunk settings; defaults to `sip.sipgate.com` |
+| `SIPGATE_REGISTRAR` | New-platform registrar shown in sipgate; defaults to `sip.sipgate.com` and uses TLS with NAPTR/SRV discovery |
 | `LIVEKIT_SIP_HOST` | LiveKit global or region-pinned SIP endpoint, without `sip:` |
 | `LIVEKIT_SIP_PORT` | LiveKit SIP port; defaults to `5060` |
 | `LIVEKIT_SIP_TRANSPORT` | LiveKit SIP transport; defaults to `tcp` |
@@ -32,6 +32,12 @@ Copy `.env.example` to `.env` for manual deployment. Never commit `.env`.
 The LiveKit inbound trunk must contain the sipgate number and matching digest
 credentials. Attach an individual dispatch rule that dispatches the
 `spark-agent` agent.
+
+The sipgate leg uses the new platform's `sip.sipgate.com` registrar over
+TLS/5061. Asterisk sends a `sip:` registration URI with `transport=tls`; the
+registrar rejects the stricter `sips:` URI scheme. Do not configure an explicit
+load-balancer proxy: DNS NAPTR/SRV discovery provides the targets while keeping
+`sip.sipgate.com` as the verified TLS certificate identity.
 
 ## Manual deployment
 
