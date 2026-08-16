@@ -66,6 +66,10 @@ outbound_auth=sipgate-auth
 server_uri=sip:${SIPGATE_USER}@${SIPGATE_REGISTRAR}\;transport=tls
 client_uri=sip:${SIPGATE_USER}@${SIPGATE_REGISTRAR}
 contact_user=${SIPGATE_USER}
+support_outbound=yes
+support_path=yes
+line=yes
+endpoint=sipgate-endpoint
 expiration=3600
 retry_interval=60
 forbidden_retry_interval=60

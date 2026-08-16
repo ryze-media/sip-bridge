@@ -38,6 +38,9 @@ TLS/5061. Asterisk sends a `sip:` registration URI with `transport=tls`; the
 registrar rejects the stricter `sips:` URI scheme. Do not configure an explicit
 load-balancer proxy: DNS NAPTR/SRV discovery provides the targets while keeping
 `sip.sipgate.com` as the verified TLS certificate identity.
+The registration advertises SIP Outbound and Path support so the new platform
+can deliver inbound calls over the established TLS flow; its `line` parameter
+associates those calls with the `sipgate-endpoint` dialplan context.
 
 ## Manual deployment
 
