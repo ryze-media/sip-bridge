@@ -40,6 +40,11 @@ grep -Fq 'endpoint=sipgate-endpoint' "$pjsip"
 grep -Fq 'auth_rejection_permanent=no' "$pjsip"
 grep -Fq 'match=217.10.64.0/20' "$pjsip"
 grep -Fq 'from_domain=sip.sipgate.com' "$pjsip"
+grep -A12 '^\[sipgate-endpoint\]$' "$pjsip" | grep -Fq 'media_encryption=sdes'
+if grep -A12 '^\[livekit\]$' "$pjsip" | grep -Fq 'media_encryption='; then
+  echo "rendered config unexpectedly enables media encryption on LiveKit" >&2
+  exit 1
+fi
 if grep -Fq 'outbound_proxy=' "$pjsip" || grep -Fq 'sipconnect.sipgate.de' "$pjsip"; then
   echo "rendered config contains a classic-platform registrar or explicit proxy" >&2
   exit 1
