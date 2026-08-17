@@ -22,6 +22,7 @@ Copy `.env.example` to `.env` for manual deployment. Never commit `.env`.
 | `SIPGATE_USER` | sipgate trunk SIP ID |
 | `SIPGATE_PASS` | sipgate trunk SIP password |
 | `SIPGATE_REGISTRAR` | New-platform registrar shown in sipgate; defaults to `sip.sipgate.com` and uses TLS with NAPTR/SRV discovery |
+| `SIPGATE_INSTANCE_ID` | Stable UUID advertised as the SIP device instance; defaults to the bridge UUID |
 | `LIVEKIT_SIP_HOST` | LiveKit global or region-pinned SIP endpoint, without `sip:` |
 | `LIVEKIT_SIP_PORT` | LiveKit SIP port; defaults to `5060` |
 | `LIVEKIT_SIP_TRANSPORT` | LiveKit SIP transport; defaults to `tcp` |
